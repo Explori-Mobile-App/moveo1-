@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>iOS Icon Generator for Explori</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        canvas { border: 1px solid #ccc; margin: 10px; }
+        .icon-set { display: flex; flex-wrap: wrap; gap: 10px; }
+        .icon-info { text-align: center; margin-top: 5px; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <h1>iOS Icon Generator for Explori</h1>
+    <p>Upload your 1024x1024 app icon and download all required iOS sizes:</p>
+    
+    <input type="file" id="iconInput" accept="image/*">
+    <button onclick="generateIcons()">Generate iOS Icons</button>
+    
+    <div id="iconContainer" class="icon-set"></div>
+    
+    <script>
+        const iosSizes = [
+            { size: 20, name: 'Icon-20.png' },
+            { size: 29, name: 'Icon-29.png' },
+            { size: 40, name: 'Icon-40.png' },
+            { size: 58, name: 'Icon-58.png' },
+            { size: 60, name: 'Icon-60.png' },
+            { size: 80, name: 'Icon-80.png' },
+            { size: 87, name: 'Icon-87.png' },
+            { size: 120, name: 'Icon-120.png' },
+            { size: 180, name: 'Icon-180.png' },
+            { size: 1024, name: 'Icon-1024.png' }
+        ];
+
+        function generateIcons() {
+            const input = document.getElementById('iconInput');
+            if (!input.files[0]) return;
+            
+            const file = input.files[0];
+            const img = new Image();
+            
+            img.onload = function() {
+                const container = document.getElementById('iconContainer');
+                container.innerHTML = '';
+                
+                iosSizes.forEach(iconSize => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    
+                    canvas.width = iconSize.size;
+                    canvas.height = iconSize.size;
+                    
+                    // Draw rounded corners for iOS style
+                    const radius = iconSize.size * 0.18; // 18% radius like iOS
+                    
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.moveTo(radius, 0);
+                    ctx.lineTo(iconSize.size - radius, 0);
+                    ctx.quadraticCurveTo(iconSize.size, 0, iconSize.size, radius);
+                    ctx.lineTo(iconSize.size, iconSize.size - radius);
+                    ctx.quadraticCurveTo(iconSize.size, iconSize.size, iconSize.size - radius, iconSize.size);
+                    ctx.lineTo(radius, iconSize.size);
+                    ctx.quadraticCurveTo(0, iconSize.size, 0, iconSize.size - radius);
+                    ctx.lineTo(0, radius);
+                    ctx.quadraticCurveTo(0, 0, radius, 0);
+                    ctx.closePath();
+                    ctx.clip();
+                    
+                    ctx.drawImage(img, 0, 0, iconSize.size, iconSize.size);
+                    ctx.restore();
+                    
+                    // Create download div
+                    const iconDiv = document.createElement('div');
+                    iconDiv.innerHTML = `
+                        <canvas width="${iconSize.size}" height="${iconSize.size}"></canvas>
+                        <div class="icon-info">${iconSize.size}x${iconSize.size}<br>${iconSize.name}</div>
+                    `;
+                    
+                    const displayCanvas = iconDiv.querySelector('canvas');
+                    const displayCtx = displayCanvas.getContext('2d');
+                    displayCtx.drawImage(canvas, 0, 0);
+                    
+                    // Add download link
+                    canvas.toBlob(blob => {
+                        const url = URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = iconSize.name;
+                        link.textContent = 'Download';
+                        iconDiv.appendChild(link);
+                    });
+                    
+                    container.appendChild(iconDiv);
+                });
+            };
+            
+            img.src = URL.createObjectURL(file);
+        }
+    </script>
+</body>
+</html>
